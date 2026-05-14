@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
 import {
-  employees as defaultEmployees, Employee,
+  Employee,
   attendanceData as defaultAttendance,
   allAttendanceToday as defaultAttToday,
   leaveRequests as defaultLeaveReqs,
@@ -129,7 +129,7 @@ function usePersisted<T>(key: string, fallback: T): [T, (fn: (prev: T) => T) => 
 }
 
 export function DataProvider({ children }: { children: ReactNode }) {
-  const [employees, setEmployees] = usePersisted('employees', defaultEmployees);
+  const [employees, setEmployees] = usePersisted<Employee[]>('employees', []);
   const [leaveRequests, setLeaveRequests] = usePersisted('leaveRequests', defaultLeaveReqs);
   const [payrollData, setPayrollData] = usePersisted('payrollData', defaultPayroll);
   const [promotions, setPromotions] = usePersisted('promotions', defaultPromotions);
