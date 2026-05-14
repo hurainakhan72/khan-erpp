@@ -105,8 +105,8 @@ function RootRedirect() {
 }
 
 const App = () => (
-  <DataProvider>
-    <AuthProvider>
+  <AuthProvider>
+    <DataProvider>
       <ToastProvider>
         <BrowserRouter>
           <Routes>
@@ -193,8 +193,8 @@ const App = () => (
           </Routes>
         </BrowserRouter>
       </ToastProvider>
-    </AuthProvider>
-  </DataProvider>
+    </DataProvider>
+  </AuthProvider>
 );
 
 export default App;

@@ -35,9 +35,57 @@ export default function EmployeeDetail() {
   const { employees, attendanceData, leaveRequests, payrollData, promotions, penalties, setPromotions, setPenalties } = useData();
   const { user, activeRole } = useAuth();
 
+  const [remoteEmp, setRemoteEmp] = React.useState<any | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    async function loadDetail() {
+      if (!id) return;
+      try {
+        const res = await fetch(`/api/employees/${encodeURIComponent(id)}`, { credentials: 'include' });
+        if (!res.ok) return;
+        const body = await res.json();
+        const data = body?.data;
+        if (!data) return;
+
+        const mapped = {
+          id: data.employee_id,
+          name: data.personalInfo?.name || data.name,
+          fatherName: data.personalInfo?.father_name || '',
+          dob: data.personalInfo?.date_of_birth || '',
+          cnic: data.personalInfo?.cnic || '',
+          gender: data.personalInfo?.gender || '',
+          department: data.jobInfo?.department_name || data.department_name || '',
+          designation: data.jobInfo?.designation_name || data.designation_name || '',
+          employmentType: data.jobInfo?.employment_type_name || '',
+          jobStatus: data.jobInfo?.job_status_name || '',
+          workMode: data.jobInfo?.work_mode_name || '',
+          workLocation: data.jobInfo?.work_location_name || '',
+          shift: data.jobInfo?.shift_name || '',
+          reportingManager: data.jobInfo?.manager_emp_id || '',
+          dateOfJoining: data.jobInfo?.date_of_joining || '',
+          contact1: data.accountInfo?.phone || data.phone || '',
+          permanentAddress: data.emergencyContacts?.perment_address || '',
+          bankName: data.bankInfo?.bank_name || '',
+          bankAccount: data.bankInfo?.account_number || '',
+          bloodGroup: data.medicalInfo?.blood_group || '',
+          allergies: data.medicalInfo?.allergy_notes || '',
+          medications: data.medicalInfo?.emergency_medication || '',
+          salary: { basic: data.salaryInfo?.base_salary || 0, houseRent: 0, medical: 0, conveyance: 0, commission: 0 },
+          avatar: data.accountInfo?.email ? data.accountInfo.email.split('@')[0].slice(0,2).toUpperCase() : '',
+        };
+        if (!cancelled) setRemoteEmp(mapped as any);
+      } catch (e) {
+        // ignore
+      }
+    }
+    loadDetail();
+    return () => { cancelled = true; };
+  }, [id]);
+
   const visibleEmployees = useMemo(() => getVisibleEmployees(user, activeRole, employees), [user, activeRole, employees]);
 
-  const emp = employees.find(e => e.id === id);
+  const emp = remoteEmp || employees.find(e => e.id === id);
 
   if (!emp || !visibleEmployees.some(ve => ve.id === emp.id)) {
     return (

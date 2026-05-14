@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { useAuth } from './AuthContext';
 import {
   employees as defaultEmployees, Employee,
   attendanceData as defaultAttendance,
@@ -155,6 +156,67 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const [customFields, setCustomFields] = usePersisted('customFields', defaultCustomFields);
   const [taxConfig, setTaxConfig] = usePersisted('taxConfig', defaultTaxConfig);
   const [globalDays, setGlobalDays] = usePersisted('globalDays', defaultGlobalDays);
+  const { user } = useAuth();
+
+  // Fetch live employees from backend after user logs in. Keep demo/default data if backend not available.
+  useEffect(() => {
+    if (!user) return; // wait for authenticated session
+    let cancelled = false;
+    async function loadFromBackend() {
+      try {
+        const res = await fetch('/api/employees?page=1&limit=1000', { credentials: 'include' });
+        if (!res.ok) return;
+        const body = await res.json();
+        const list = body?.data?.employees || body?.data || [];
+        if (!Array.isArray(list)) return;
+        const mapped = list.map((it: any) => ({
+          id: it.employee_id || it.id,
+          name: it.name || (it.personalInfo && it.personalInfo.name) || '',
+          fatherName: (it.personalInfo && it.personalInfo.father_name) || it.fatherName || '',
+          dob: (it.personalInfo && it.personalInfo.date_of_birth) || it.dob || '',
+          cnic: it.cnic || '',
+          gender: (it.personalInfo && it.personalInfo.gender) || it.gender || '',
+          department: it.department_name || (it.jobInfo && it.jobInfo.department_name) || it.department || '',
+          designation: it.designation_name || (it.jobInfo && it.jobInfo.designation_name) || it.designation || '',
+          employmentType: it.employment_type_name || it.employmentType || '',
+          jobStatus: it.job_status_name || it.jobStatus || (it.jobInfo && it.jobInfo.job_status) || 'Active',
+          workMode: it.work_mode_name || it.workMode || '',
+          workLocation: it.work_location_name || it.workLocation || '',
+          shift: it.shift_name || it.shift || '',
+          reportingManager: it.manager_emp_id || it.reportingManager || '',
+          dateOfJoining: (it.jobInfo && it.jobInfo.date_of_joining) || it.date_of_joining || it.dateOfJoining || '',
+          dateOfExit: (it.jobInfo && it.jobInfo.date_of_exit) || it.dateOfExit || '',
+          contact1: (it.accountInfo && it.accountInfo.phone) || it.contact1 || it.phone || '',
+          contact2: '',
+          emergency1: (it.emergencyContacts && it.emergencyContacts.e_contact_1_phone) || it.emergency1 || '',
+          emergency2: '',
+          permanentAddress: (it.emergencyContacts && it.emergencyContacts.perment_address) || it.permanentAddress || '',
+          postalAddress: (it.emergencyContacts && it.emergencyContacts.postal_address) || it.postalAddress || '',
+          bankName: (it.bankInfo && it.bankInfo.bank_name) || it.bankName || '',
+          bankAccount: (it.bankInfo && it.bankInfo.account_number) || it.bankAccount || '',
+          paymentMode: it.paymentMode || '',
+          bloodGroup: (it.medicalInfo && it.medicalInfo.blood_group) || it.bloodGroup || '',
+          allergies: (it.medicalInfo && it.medicalInfo.allergy_notes) || it.allergies || '',
+          chronicConditions: (it.medicalInfo && it.medicalInfo.chronic_condition_notes) || it.chronicConditions || '',
+          medications: (it.medicalInfo && it.medicalInfo.emergency_medication) || it.medications || '',
+          avatar: (it.accountInfo && it.accountInfo.email && it.accountInfo.email.split('@')[0].slice(0,2).toUpperCase()) || (it.avatar || ''),
+          commissionEligible: !!it.commissionEligible,
+          salary: {
+            basic: (it.salaryInfo && it.salaryInfo.base_salary) || (it.salary && it.salary.basic) || 0,
+            houseRent: (it.salary && it.salary.houseRent) || 0,
+            medical: (it.salary && it.salary.medical) || 0,
+            conveyance: (it.salary && it.salary.conveyance) || 0,
+            commission: (it.salary && it.salary.commission) || 0,
+          },
+        }));
+        if (!cancelled) setEmployees(() => mapped as any);
+      } catch (e) {
+        // ignore — keep demo/local data
+      }
+    }
+    loadFromBackend();
+    return () => { cancelled = true; };
+  }, [user, setEmployees]);
 
   const addEmployee = useCallback((emp: Employee) => {
     setEmployees(prev => [...prev, emp]);
