@@ -1,0 +1,28 @@
+{
+  "total": 520,
+  "success": 59,
+  "fail": 461,
+  "perRole": {
+    "unknown": 461,
+    "employee": 58,
+    "hr_manager": 1
+  },
+  "superadminProblem": {
+    "empId": "EMP001",
+    "email": "superadmin@esspl.com.pk",
+    "name": "Muhammad Bilal Ahmed",
+    "password": "SuperAdmin@123!",
+    "loginOk": false,
+    "session": {
+      "success": false,
+      "error": {
+        "code": "UNAUTHORIZED",
+        "message": "Authentication required."
+      }
+    },
+    "employeesVisible": 0,
+    "editVisible": false,
+    "deleteVisible": false
+  },
+  "editVisibleAnomalies": []
+}
